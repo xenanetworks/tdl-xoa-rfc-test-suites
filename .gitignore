@@ -1,0 +1,13 @@
+config.py
+*.log
+*.json
+*.pyc
+**/__pycache__/**
+*.bak
+*.dat
+*.dir
+*.python-version
+*.v2544
+*.v3918
+/env
+.vscode

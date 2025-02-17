@@ -1,0 +1,8 @@
+name: "RFC-2544"
+version: "2.0.4"
+core_version: ">=2.0.0" 
+author: 
+  - "MC"
+  - "RDI"
+entry_object: "TestSuite2544"
+data_model: "PluginModel2544"
