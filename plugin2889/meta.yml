@@ -1,7 +1,5 @@
 name: "RFC-2889"
-version: "2.0.4"
-core_version: ">=2.0.0"
-author:
-  - "Frank Chen"
+version: "1.0.0"
+core_version: ">=1.0.0"
 entry_object: "TestSuite2889"
 data_model: "TestSuiteConfiguration2889"
