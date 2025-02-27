@@ -1,4 +1,4 @@
-xena-rfc-converter
-xena-rfc-core
-xena-driver
+tdl-xoa-driver
+tdl-xoa-core
+tdl-xoa-converter
 rich==12.6.0
