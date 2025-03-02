@@ -4,6 +4,7 @@ from decimal import Decimal
 from typing import TYPE_CHECKING, Optional, Union
 from loguru import logger
 from xoa_driver.utils import apply
+from xoa_driver.misc import Hex
 
 if TYPE_CHECKING:
     from xoa_driver.misc import GenuineStream
@@ -67,7 +68,7 @@ class StreamManager:
         await apply(
             stream.tpld_id.set(self.tpld_id),
             stream.packet.header.protocol.set(self.__resource.port_config.profile.segment_id_list),
-            stream.packet.header.data.set(self.header),
+            stream.packet.header.data.set(Hex(self.header)),
             stream.payload.content.set_inc_byte(f"{'0'*36}"),
             stream.insert_packets_checksum.set_on(),
             stream.enable.set_on(),
@@ -93,7 +94,7 @@ class StreamManager:
     async def set_peer_mac_address(self, new_peer_mac_address: "MacAddress") -> None:
         logger.debug(f"{self}, {new_peer_mac_address}")
         self.__peer_mac = new_peer_mac_address
-        await asyncio.gather(*[stream.packet.header.data.set(self.header) for stream in self.__resource.port.streams])
+        await asyncio.gather(*[stream.packet.header.data.set(Hex(self.header)) for stream in self.__resource.port.streams])
 
     async def set_fixed_packet_size(self, size) -> None:
         asyncio.gather(*[stream.packet.length.set_fixed(size, size) for stream in self.__resource.port.streams])

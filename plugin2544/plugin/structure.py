@@ -2,6 +2,7 @@ import asyncio
 from typing import List, TYPE_CHECKING, Optional, Set, Tuple, Union
 from dataclasses import dataclass, field
 from xoa_driver import enums, misc, utils as driver_utils
+from xoa_driver.misc import Hex
 from .common import gen_macaddress
 from .data_model import (
     ArpRefreshData,
@@ -151,11 +152,11 @@ class PortStruct:
             )
         if bool(self.port_ins.info.capabilities.can_set_link_train):
             await self.port_ins.pcs_pma.link_training.settings.set(
-                enums.LinkTrainingMode.FORCE_ENABLE,
-                enums.PAM4FrameSize.N16K_FRAME,
+                enums.LinkTrainingMode.STANDALONE,
+                enums.PAM4FrameSize.P16K_FRAME,
                 enums.LinkTrainingInitCondition.NO_INIT,
                 enums.NRZPreset.NRZ_NO_PRESET,
-                enums.TimeoutMode.DEFAULT_TIMEOUT,
+                enums.TimeoutMode.DEFAULT,
             )
         else:
             self._xoa_out.send_warning(
@@ -215,7 +216,7 @@ class PortStruct:
                 await self.port_ins.mix.lengths[position].set(v)
 
     def send_packet(self, packet: str) -> "misc.Token":
-        return self.port_ins.tx_single_pkt.send.set(packet)
+        return self.port_ins.tx_single_pkt.send.set(Hex(packet))
 
     def free(self, stop_test=False) -> "misc.Token":
         self.stop = stop_test
@@ -272,10 +273,10 @@ class PortStruct:
         for arp_data in arp_datas:
             arp_chunk.append(
                 misc.ArpChunk(
-                    arp_data.destination_ip,
+                    IPv4Address(arp_data.destination_ip),
                     const.IPPrefixLength.IPv4.value,
                     enums.OnOff.OFF,
-                    arp_data.dmac,
+                    Hex(arp_data.dmac),
                 )
             )
         await self.port_ins.arp_rx_table.set(arp_chunk)
@@ -285,10 +286,10 @@ class PortStruct:
         for rx_data in ndp_datas:
             ndp_chunk.append(
                 misc.NdpChunk(
-                    rx_data.destination_ip,
+                    IPv6Address(rx_data.destination_ip),
                     const.IPPrefixLength.IPv6.value,
                     enums.OnOff.OFF,
-                    rx_data.dmac,
+                    Hex(rx_data.dmac),
                 )
             )
         await self.port_ins.ndp_rx_table.set(ndp_chunk)
@@ -328,7 +329,7 @@ class PortStruct:
                 ipv4_address=ip_properties.address,
                 subnet_mask=subnet_mask,
                 gateway=ip_properties.gateway,
-                wild="0.0.0.0",
+                wild=IPv4Address("0.0.0.0"),
             )
         elif isinstance(ip_properties.address, IPv6Address) and isinstance(
             ip_properties.gateway, IPv6Address
@@ -341,7 +342,7 @@ class PortStruct:
             )
 
     async def set_mac_address(self, mac_addr: str) -> None:
-        await self.port_ins.net_config.mac_address.set(mac_addr)
+        await self.port_ins.net_config.mac_address.set(Hex(mac_addr))
         self.properties.native_mac_address = MacAddress(mac_addr)
 
     @property

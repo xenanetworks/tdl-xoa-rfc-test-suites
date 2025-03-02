@@ -33,9 +33,6 @@ class DelayCounter(AvgMinMax):
     _total: int = 0
     _count: int = 0
 
-    class Config:
-        underscore_attrs_are_private = True
-
     def sum(self, other: "DelayCounter") -> None:
         for name, value in self:
             setattr(self, name, value + attrgetter(name)(other))
@@ -136,9 +133,6 @@ class PortCounter(StreamCounter):
     l2_bps: int = 0
     l1_bps: int = 0
     fps: int = 0
-
-    class Config:
-        underscore_attrs_are_private = True
 
     def sum(self, other: "PortCounter") -> None:
         for name, value in self:

@@ -7,95 +7,54 @@ from ipaddress import (
     IPv6Address as OriginIPv6Address,
 )
 from typing import Union, Optional
-from pydantic import BaseModel, validator, Field
+from pydantic import BaseModel, field_validator, Field
 from ..utils import constants as const
 from ..utils.field import MacAddress, IPv4Address, IPv6Address, Prefix
 from .m_protocol_segment import ProtocolSegmentProfileConfig
 
 
-class IPAddressProperties(BaseModel):
-    address: Union[IPv4Address, IPv6Address] = IPv4Address("0.0.0.0")
-    routing_prefix: Prefix = Prefix(24)
-    public_address: Union[IPv4Address, IPv6Address] = IPv4Address("0.0.0.0")
-    public_routing_prefix: Prefix = Prefix(24)
-    gateway: Union[IPv4Address, IPv6Address] = IPv4Address("0.0.0.0")
-    remote_loop_address: Union[IPv4Address, IPv6Address] = IPv4Address("0.0.0.0")
+class IPAddressProperties(BaseModel, arbitrary_types_allowed=True):
+    address: Union[IPv4Address, IPv6Address, str] = "0.0.0.0"
+    routing_prefix: Prefix | int = Prefix(24)
+    public_address: Union[IPv4Address, IPv6Address, str] = "0.0.0.0"
+    public_routing_prefix: Prefix | int = Prefix(24)
+    gateway: Union[IPv4Address, IPv6Address, str] = "0.0.0.0"
+    remote_loop_address: Union[IPv4Address, IPv6Address, str] = "0.0.0.0"
     # ip_version: const.IPVersion = const.IPVersion.IPV6
 
     @property
     def network(self) -> Union["IPv4Network", "IPv6Network"]:
         return ip_network(f"{self.address}/{self.routing_prefix}", strict=False)
 
-    @validator(
-        "address",
-        "public_address",
-        "gateway",
-        "remote_loop_address",
-        pre=True,
-        allow_reuse=True,
-    )
+    @field_validator("address", "public_address", "gateway", "remote_loop_address", mode="before")
     def set_address(
-        cls, origin_addr: Union[str, "IPv4Address", "IPv6Address"]
+        cls, value: Union[str, "IPv4Address", "IPv6Address"]
     ) -> Union["IPv4Address", "IPv6Address"]:
-        address = ip_address(origin_addr)
+        address = ip_address(value)
         return (
             IPv4Address(address)
             if isinstance(address, OriginIPv4Address)
             else IPv6Address(address)
         )
 
-    @validator("routing_prefix", "public_routing_prefix", pre=True, allow_reuse=True)
-    def set_prefix(cls, v: int) -> Prefix:
-        return Prefix(v)
+    @field_validator("routing_prefix", "public_routing_prefix", mode="before")
+    def set_prefix(cls, value: int) -> Prefix:
+        return Prefix(value)
 
     @property
-    def dst_addr(self) -> Union["IPv4Address", "IPv6Address"]:
+    def dst_addr(self) -> Union["IPv4Address", "IPv6Address", str]:
         return self.public_address if not self.public_address.is_empty else self.address
 
-
-# class IPV4AddressProperties(BaseModel):
-#     address: IPv4Address = IPv4Address("0.0.0.0")
-#     routing_prefix: Prefix = Prefix(24)
-#     public_address: IPv4Address = IPv4Address("0.0.0.0")
-#     public_routing_prefix: Prefix = Prefix(24)
-#     gateway: IPv4Address = IPv4Address("0.0.0.0")
-#     remote_loop_address: IPv4Address = IPv4Address("0.0.0.0")
-#     ip_version: const.IPVersion = const.IPVersion.IPV4
-
-#     @property
-#     def network(self) -> "IPv4Network":
-#         return IPv4Network(f"{self.address}/{self.routing_prefix}", strict=False)
-
-#     @validator(
-#         "address",
-#         "public_address",
-#         "gateway",
-#         "remote_loop_address",
-#         pre=True,
-#         allow_reuse=True,
-#     )
-#     def set_address(cls, v: Union[str, "IPv4Address"]) -> "IPv4Address":
-#         return IPv4Address(v)
-
-#     @validator("routing_prefix", "public_routing_prefix", pre=True, allow_reuse=True)
-#     def set_prefix(cls, v: int) -> Prefix:
-#         return Prefix(v)
-
-#     @property
-#     def dst_addr(self) -> "IPv4Address":
-#         return self.public_address if not self.public_address.is_empty else self.address
-
-
-class PortConfiguration(BaseModel):
+class PortConfiguration(BaseModel, arbitrary_types_allowed=True):
     port_slot: int
     peer_slot: Optional[int]
     port_group: const.PortGroup
     port_speed_mode: const.PortSpeedStr
     ip_address: Optional[IPAddressProperties]
-    ip_gateway_mac_address: MacAddress
+    ip_gateway_mac_address: MacAddress | str
     reply_arp_requests: bool
     reply_ping_requests: bool
-    remote_loop_mac_address: MacAddress
+    remote_loop_mac_address: MacAddress | str
     inter_frame_gap: float
     speed_reduction_ppm: int = Field(ge=0)
     pause_mode_enabled: bool
@@ -121,12 +80,9 @@ class PortConfiguration(BaseModel):
     _is_tx: bool = True
     _is_rx: bool = True
 
-    class Config:
-        underscore_attrs_are_private = True
-
-    @validator("ip_gateway_mac_address", pre=True)
-    def set_ip_gateway_mac_address(cls, ip_gateway_mac_address: str) -> "MacAddress":
-        return MacAddress(ip_gateway_mac_address)
+    @field_validator("ip_gateway_mac_address", mode="before")
+    def set_ip_gateway_mac_address(cls, value: str) -> "MacAddress":
+        return MacAddress(value)
 
     @property
     def is_tx_port(self) -> bool:

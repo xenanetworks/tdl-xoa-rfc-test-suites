@@ -1,21 +1,16 @@
 import re
-from typing import List, Optional
-from pydantic import BaseModel
-from pydantic.class_validators import validator
+from typing import List, Optional, Annotated, Any
+from pydantic import BaseModel, field_validator, ValidationInfo
+from pydantic_core import CoreSchema, core_schema
+from pydantic import GetCoreSchemaHandler, TypeAdapter
 from xoa_driver.enums import ProtocolOption, ModifierAction
 from plugin2889.const import Enum
 
 
 class BinaryString(str):
     @classmethod
-    def __get_validators__(cls):
-        yield cls.validate
-
-    @classmethod
-    def validate(cls, v) -> "BinaryString":
-        if not re.search("^[01]+$", v):
-            raise ValueError('binary string must zero or one')
-        return cls(v)
+    def __get_pydantic_core_schema__(cls, source_type: Any, handler: GetCoreSchemaHandler) -> CoreSchema:
+        return core_schema.no_info_after_validator_function(cls, handler(str))
 
     @property
     def is_all_zero(self) -> bool:
@@ -163,7 +158,7 @@ class ProtocolSegment(BaseModel):
     fields: List[SegmentField]
     checksum_offset: Optional[int]
 
-    @validator('checksum_offset')
+    @field_validator('checksum_offset')
     def is_digit(cls, value):
         if value and not isinstance(value, int):
             raise ValueError('checksum offset must digit')

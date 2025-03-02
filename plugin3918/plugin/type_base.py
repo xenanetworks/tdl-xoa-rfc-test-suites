@@ -20,7 +20,7 @@ from xoa_driver.enums import (
 )
 from xoa_driver.lli import commands
 from xoa_driver.misc import Token
-from ..utils.field import MacAddress, NewIPv6Address
+from ..utils.field import MacAddress, NewIPv6Address, NewIPv4Address
 from ..utils.scheduler import schedule
 from ..plugin.mc_operations import get_multicast_mac_for_ip
 from .icmp_header import IgmpMld

@@ -1,22 +1,27 @@
 import re
 from enum import Enum
 from random import randint
-from typing import Any, Callable, Dict, Generator, List, Optional
-from pydantic import BaseModel, Field
-from pydantic.class_validators import validator
+from typing import Any, Callable, Dict, Generator, List, Optional, Annotated
+from pydantic import BaseModel, Field, field_validator, ValidationInfo
+from pydantic_core import CoreSchema, core_schema
+from pydantic import GetCoreSchemaHandler, TypeAdapter
 from xoa_driver.enums import ProtocolOption, ModifierAction
 from ..utils.exceptions import ModifierRangeError
 
 class BinaryString(str):
     @classmethod
-    def __get_validators__(cls) -> Generator[Callable, None, None]:
-        yield cls.validate
+    def __get_pydantic_core_schema__(cls, source_type: Any, handler: GetCoreSchemaHandler) -> CoreSchema:
+        return core_schema.no_info_after_validator_function(cls, handler(str))
+    
+    # @classmethod
+    # def __get_validators__(cls) -> Generator[Callable, None, None]:
+    #     yield cls.validate
 
-    @classmethod
-    def validate(cls, v: str) -> "BinaryString":
-        if not re.search("^[01]+$", v):
-            raise ValueError("binary string must zero or one")
-        return cls(v)
+    # @classmethod
+    # def validate(cls, v: str) -> "BinaryString":
+    #     if not re.search("^[01]+$", v):
+    #         raise ValueError("binary string must zero or one")
+    #     return cls(v)
 
     @property
     def is_all_zero(self) -> bool:
@@ -91,13 +96,17 @@ class SegmentType(Enum):
 
     @property
     def is_raw(self) -> bool:
-        return self.value.lower().startswith("raw")
+        if isinstance(self.value, str):
+            return self.value.lower().startswith("raw")
+        return False
 
     @property
     def raw_length(self) -> int:
         if not self.is_raw:
             return 0
-        return int(self.value.split("_")[-1])
+        if isinstance(self.value, str):
+            return int(self.value.split("_")[-1])
+        return 0
 
     def to_xmp(self) -> "ProtocolOption":
         return ProtocolOption[self.name]
@@ -122,9 +131,6 @@ class ValueRange(BaseModel):
     action: ModifierActionOption
     restart_for_each_port: bool
     _current_count: int = 0  # counter start from 0
-
-    class Config:
-        underscore_attrs_are_private = True
 
     def reset(self) -> None:
         self._current_count = 0
@@ -157,21 +163,20 @@ class ValueRange(BaseModel):
 class HWModifier(BaseModel):
     start_value: int
     step_value: int = Field(gt=0)
-    stop_value: int
+    stop_value: Annotated[int, Field(validate_default=True)]
     repeat: int
     offset: int
     action: ModifierActionOption
     mask: str  # hex string as 'FFFF'
     _byte_segment_position: int = 0  # byte position of all header segments
 
-    class Config:
-        underscore_attrs_are_private = True
-
-    @validator('stop_value', pre=True, always=True)
-    def validate_modifier_value(cls, v: int, values: Dict[str, Any]):
-        if (v - values['start_value']) % values['step_value']:
-            raise ModifierRangeError(values['start_value'], v, values['step_value'])
-        return v
+    @field_validator('stop_value', mode="before")
+    def validate_modifier_value(cls, value: int, info: ValidationInfo):
+        start_value = info.data['start_value']
+        step_value = info.data['step_value']
+        if (value - start_value) % step_value:
+            raise ModifierRangeError(start_value, value, step_value)
+        return value
 
 
     def set_byte_segment_position(self, position: int) -> None:
@@ -241,7 +246,7 @@ class ProtocolSegment(BaseModel):
     def value_ranges(self) -> Generator["ValueRange", None, None]:
         return (f.value_range for f in self.fields if f.value_range)
 
-    @validator("checksum_offset")
+    @field_validator("checksum_offset")
     def is_digit(cls, value: int) -> int:
         if value and not isinstance(value, int):
             raise ValueError("checksum offset must digit")

@@ -1,5 +1,5 @@
-from typing import Any, Dict, List, Tuple
-from pydantic import BaseModel, Field, validator
+from typing import Any, Dict, List, Tuple, Annotated
+from pydantic import BaseModel, Field, field_validator, ValidationInfo
 from ..utils import constants as const, exceptions
 
 
@@ -14,7 +14,7 @@ class FrameSize(BaseModel):
     # FrameSizes
     packet_size_type: const.PacketSizeType
     # FixedSizesPerTrial
-    custom_packet_sizes: List[int]
+    custom_packet_sizes: Annotated[List[int], Field(validate_default=True)]
     fixed_packet_start_size: int = Field(ge=0)
     fixed_packet_end_size: int = Field(ge=0)
     fixed_packet_step_size: int = Field(gt=0)
@@ -22,30 +22,28 @@ class FrameSize(BaseModel):
     varying_packet_min_size: int = Field(ge=0)
     varying_packet_max_size: int = Field(ge=0)
     mixed_length_config: FrameSizesOptions
-    mixed_sizes_weights: List[int] = list(const.MIXED_DEFAULT_WEIGHTS)
+    mixed_sizes_weights: Annotated[List[int], Field(validate_default=True)] = list(const.MIXED_DEFAULT_WEIGHTS)
 
-    @validator("custom_packet_sizes", pre=True, always=True)
-    def is_custom_packet_sizes_valid(
-        cls, v: List[int], values: Dict[str, Any]
-    ) -> List[int]:
-        for i in v:
+    @field_validator("custom_packet_sizes", mode="before")
+    def is_custom_packet_sizes_valid(cls, value: List[int]) -> List[int]:
+        for i in value:
             if i < 0:
                 raise exceptions.SmallerThanZeroError(i)
-        return v
+        return value
 
-    @validator("mixed_sizes_weights", pre=True, always=True)
-    def is_mixed_weights_valid(cls, v: List[int], values: Dict[str, Any]) -> List[int]:
-        if "packet_size_type" in values:
-            if values["packet_size_type"] == const.PacketSizeType.MIX:
-                if not v or len(v) != len(const.MIXED_DEFAULT_WEIGHTS):
+    @field_validator("mixed_sizes_weights", mode="before")
+    def is_mixed_weights_valid(cls, value: List[int], info: ValidationInfo) -> List[int]:
+        if "packet_size_type" in info.data:
+            if info.data["packet_size_type"] == const.PacketSizeType.MIX:
+                if not value or len(value) != len(const.MIXED_DEFAULT_WEIGHTS):
                     raise exceptions.MixWeightsNotEnough()
-                sum_of_weights = sum(v)
+                sum_of_weights = sum(value)
                 if not sum_of_weights == 100:
                     raise exceptions.MixWeightsSumError(sum_of_weights)
-            for i in v:
+            for i in value:
                 if i < 0:
                     raise exceptions.SmallerThanZeroError(i)
-        return v
+        return value
 
 
 class MultiStreamConfig(BaseModel):
@@ -143,12 +141,12 @@ class TestConfigModel(BaseModel):
     multi_stream_config: MultiStreamConfig
     test_execution_config: TestExecutionConfig
 
-    @validator("multi_stream_config")
+    @field_validator("multi_stream_config")
     def validate_multi_stream(
-        cls, v: "MultiStreamConfig", values: Dict[str, Any]
+        cls, value: "MultiStreamConfig", info: ValidationInfo
     ) -> "MultiStreamConfig":
-        if "flow_creation_type" not in values:
-            return v
-        if not values["flow_creation_type"].is_stream_based and v.enable_multi_stream:
+        if "flow_creation_type" not in info.data:
+            return value
+        if not info.data["flow_creation_type"].is_stream_based and value.enable_multi_stream:
             raise exceptions.ModifierBasedNotSupportMultiStream()
-        return v
+        return value
