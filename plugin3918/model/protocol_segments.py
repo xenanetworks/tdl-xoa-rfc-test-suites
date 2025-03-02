@@ -1,5 +1,5 @@
-from typing import List, Optional
-from pydantic import validator, BaseModel, NonNegativeInt
+from typing import List, Optional, Annotated
+from pydantic import field_validator, BaseModel, NonNegativeInt, Field
 from xoa_driver.enums import ProtocolOption as XProtocolOption
 from ..utils.errors import NoIpSegment
 from ..utils.constants import (
@@ -39,7 +39,7 @@ class SegmentDefinition(BaseModel):
     class Config:
         arbitrary_types_allowed = True
 
-    @validator("field_definitions")
+    @field_validator("field_definitions")
     def set_field_properties(cls, v):  # FixupDependencies
         curr_bit_offset = 0
         # curr_byte_offset = 0
@@ -875,7 +875,7 @@ DEFAULT_SEGMENT_DIC = {
 
 class HwModifier(BaseModel):
     field_name: str
-    mask: str
+    mask: Annotated[str, Field(validate_default=True)]
     action: str
     start_value: int
     stop_value: int
@@ -887,7 +887,7 @@ class HwModifier(BaseModel):
     byte_offset: int = 0  # byte offset from current segment start
     position: NonNegativeInt = 0  # byte position from all segment start
 
-    @validator("mask", pre=True, always=True)
+    @field_validator("mask", mode="before")
     def set_mask(cls, v):
         v = v[2:6] if v.startswith("0x") else v
         return f"{v}"

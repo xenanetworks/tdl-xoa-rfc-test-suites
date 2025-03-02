@@ -23,6 +23,7 @@ from typing import (
 from loguru import logger
 from xoa_driver.utils import apply
 from xoa_driver.enums import OnOff
+from xoa_driver.misc import Hex
 from xoa_core.types import PortIdentity
 
 from plugin2889 import const
@@ -387,7 +388,7 @@ class AddressLearningBase(TestBase[TCFG], BinarySearchMixin[T]):
                 modifier = modifiers.obtain(0)
                 tokens.extend(
                     [
-                        modifier.specification.set(position=modifier_position + 1, mask="ffff0000", action=ModifierActionOption.INC.to_xmp(), repetition=1),
+                        modifier.specification.set(position=modifier_position + 1, mask=Hex("ffff0000"), action=ModifierActionOption.INC.to_xmp(), repetition=1),
                         modifier.range.set(min_val=1, step=1, max_val=0xffff)
                     ]
                 )
@@ -396,9 +397,9 @@ class AddressLearningBase(TestBase[TCFG], BinarySearchMixin[T]):
                 modifier1 = modifiers.obtain(1)
                 tokens.extend(
                     [
-                        modifier0.specification.set(position=modifier_position, mask="fff00000", action=ModifierActionOption.INC.to_xmp(), repetition=0x1000),
+                        modifier0.specification.set(position=modifier_position, mask=Hex("fff00000"), action=ModifierActionOption.INC.to_xmp(), repetition=0x1000),
                         modifier0.range.set(min_val=1, step=1, max_val=0xfff),
-                        modifier1.specification.set(position=modifier_position + 1, mask="0fff0000", action=ModifierActionOption.INC.to_xmp(), repetition=1),
+                        modifier1.specification.set(position=modifier_position + 1, mask=Hex("0fff0000"), action=ModifierActionOption.INC.to_xmp(), repetition=1),
                         modifier1.range.set(min_val=1, step=1, max_val=0xfff),
                     ]
                 )
@@ -408,9 +409,9 @@ class AddressLearningBase(TestBase[TCFG], BinarySearchMixin[T]):
             modifier1 = modifiers.obtain(1)
             tokens.extend(
                 [
-                    modifier0.specification.set(position=modifier_position - 1, mask="ffff0000", action=ModifierActionOption.RANDOM.to_xmp(), repetition=1),
+                    modifier0.specification.set(position=modifier_position - 1, mask=Hex("ffff0000"), action=ModifierActionOption.RANDOM.to_xmp(), repetition=1),
                     modifier0.range.set(min_val=0, step=1, max_val=0xfff),
-                    modifier1.specification.set(position=modifier_position + 1, mask="0fff0000", action=ModifierActionOption.RANDOM.to_xmp(), repetition=1),
+                    modifier1.specification.set(position=modifier_position + 1, mask=Hex("0fff0000"), action=ModifierActionOption.RANDOM.to_xmp(), repetition=1),
                     modifier1.range.set(min_val=1, step=1, max_val=0xfff),
                 ]
             )

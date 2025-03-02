@@ -1,5 +1,5 @@
-from typing import Any, Dict, Union
-from pydantic import BaseModel, Field, validator
+from typing import Any, Dict, Union, Annotated
+from pydantic import BaseModel, Field, field_validator, ValidationInfo
 from ..utils.constants import (
     DurationType,
     DurationUnit,
@@ -15,18 +15,18 @@ from ..utils import constants
 class CommonOptions(BaseModel):
     duration_type: DurationType = DurationType.FRAME
     duration: float = Field(default=1, ge=1.0, le=1e9)
-    duration_unit: DurationUnit = DurationUnit.FRAME
+    duration_unit: Annotated[DurationUnit, Field(validate_default=True)] = DurationUnit.FRAME
     repetition: int = Field(default=1, ge=1, le=1e6)
 
-    @validator("duration_unit", always=True)
+    @field_validator("duration_unit")
     def validate_duration(
-        cls, v: "DurationUnit", values: Dict[str, Any]
+        cls, value: "DurationUnit", info: ValidationInfo
     ) -> "DurationUnit":
-        if "duration_type" in values and not values["duration_type"].is_time_duration:
-            cur = values["duration"] * v.scale
+        if "duration_type" in info.data and not info.data["duration_type"].is_time_duration:
+            cur = info.data["duration"] * value.scale
             if cur > constants.MAX_PACKET_LIMIT_VALUE:
                 raise exceptions.PacketLimitOverflow(cur)
-        return v
+        return value
 
 
 class RateIterationOptions(BaseModel):
@@ -37,12 +37,12 @@ class RateIterationOptions(BaseModel):
     minimum_value_pct: float = Field(ge=0.0, le=100.0)
     value_resolution_pct: float = Field(ge=0.0, le=100.0)
 
-    @validator("initial_value_pct", "minimum_value_pct")
-    def check_if_larger_than_maximun(cls, v: float, values: Dict[str, Any]) -> float:
-        if "maximum_value_pct" in values:
-            if v > values["maximum_value_pct"]:
-                raise exceptions.RateRestriction(v, values["maximum_value_pct"])
-        return v
+    @field_validator("initial_value_pct", "minimum_value_pct")
+    def check_if_larger_than_maximun(cls, value: float, info: ValidationInfo) -> float:
+        if "maximum_value_pct" in info.data:
+            if value > info.data["maximum_value_pct"]:
+                raise exceptions.RateRestriction(value, info.data["maximum_value_pct"])
+        return value
 
 
 class ThroughputTest(BaseModel):
@@ -60,12 +60,12 @@ class RateSweepOptions(BaseModel):
     end_value_pct: float
     step_value_pct: float = Field(gt=0.0)
 
-    @validator("end_value_pct")
-    def validate_end_value(cls, end_value_pct: float, values: Dict[str, Any]) -> float:
-        if "start_value_pct" in values:
-            if end_value_pct < values["start_value_pct"]:
+    @field_validator("end_value_pct")
+    def validate_end_value(cls, value: float, info: ValidationInfo) -> float:
+        if "start_value_pct" in info.data:
+            if value < info.data["start_value_pct"]:
                 raise exceptions.RangeRestriction()
-        return end_value_pct
+        return value
 
 
 class BurstSizeIterationOptions(BaseModel):

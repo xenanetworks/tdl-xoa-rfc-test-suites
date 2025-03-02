@@ -30,7 +30,7 @@ from pydantic import (
     BaseModel,
     NonNegativeInt,
     Field,
-    validator,
+    field_validator,
 )
 from xoa_driver import ports
 
@@ -72,7 +72,7 @@ class NewRateSweepOptions(BaseModel):
     end_value: Decimal
     step_value: Decimal
 
-    @validator("start_value", "end_value", "step_value", allow_reuse=True)
+    @field_validator("start_value", "end_value", "step_value")
     def to_decimal(cls, v):
         return Decimal(v)
 
@@ -718,23 +718,23 @@ class AddressCollection:
     dst_ipv6_addr: IPv6Address
 
 class IPV6AddressProperties(BaseModel):
-    address: IPv6Address
-    routing_prefix: Prefix = Prefix(24)
-    public_address: IPv6Address
-    public_routing_prefix: Prefix = Prefix(24)
-    gateway: IPv6Address
-    remote_loop_address: IPv6Address
+    address: IPv6Address | str
+    routing_prefix: Prefix | int = Prefix(24)
+    public_address: IPv6Address | str
+    public_routing_prefix: Prefix|int = Prefix(24)
+    gateway: IPv6Address|str
+    remote_loop_address: IPv6Address|str
     ip_version: IPVersion = IPVersion.IPV6
 
     @property
     def network(self) -> IPv6Network:
         return IPv6Network(f"{self.address}/{self.routing_prefix}", strict=False)
 
-    @validator("address", "public_address", "gateway", "remote_loop_address", pre=True, allow_reuse=True)
+    @field_validator("address", "public_address", "gateway", "remote_loop_address", mode="before")
     def set_address(cls, v) -> IPv6Address:
         return IPv6Address(v)
 
-    @validator("routing_prefix", "public_routing_prefix", pre=True, allow_reuse=True)
+    @field_validator("routing_prefix", "public_routing_prefix", mode="before")
     def set_prefix(cls, v) -> Prefix:
         return Prefix(v)
 
@@ -744,12 +744,12 @@ class IPV6AddressProperties(BaseModel):
 
 
 class IPV4AddressProperties(BaseModel):
-    address: IPv4Address
-    routing_prefix: Prefix = Prefix(24)
-    public_address: IPv4Address
-    public_routing_prefix: Prefix = Prefix(24)
-    gateway: IPv4Address
-    remote_loop_address: IPv4Address
+    address: IPv4Address|str
+    routing_prefix: Prefix|int = Prefix(24)
+    public_address: IPv4Address|str
+    public_routing_prefix: Prefix|int = Prefix(24)
+    gateway: IPv4Address|str
+    remote_loop_address: IPv4Address|str
     ip_version: IPVersion = IPVersion.IPV4
 
     @property
@@ -760,16 +760,16 @@ class IPV4AddressProperties(BaseModel):
     def is_ip_zero(ip_address: IPv4Address) -> bool:
         return ip_address == IPv4Address("0.0.0.0") or (not ip_address)
 
-    @validator("address", "public_address", "gateway", "remote_loop_address", pre=True, allow_reuse=True)
+    @field_validator("address", "public_address", "gateway", "remote_loop_address", mode="before")
     def set_address(cls, v):
         return IPv4Address(v)
 
-    @validator("routing_prefix", "public_routing_prefix", pre=True, allow_reuse=True)
+    @field_validator("routing_prefix", "public_routing_prefix", mode="before")
     def set_prefix(cls, v):
         return Prefix(v)
 
     @property
-    def dst_addr(self) -> "IPv4Address":
+    def dst_addr(self) -> Union["IPv4Address", str]:
         return self.public_address if not self.public_address.is_empty else self.address
 
 
@@ -803,10 +803,10 @@ class PortConfiguration(BaseModel):
 
     profile_id: str
 
-    ip_gateway_mac_address: MacAddress
+    ip_gateway_mac_address: MacAddress | str
     reply_arp_requests: bool
     reply_ping_requests: bool
-    remote_loop_mac_address: MacAddress
+    remote_loop_mac_address: MacAddress | str
     ipv4_properties: IPV4AddressProperties
     ipv6_properties: IPV6AddressProperties
     item_id: str

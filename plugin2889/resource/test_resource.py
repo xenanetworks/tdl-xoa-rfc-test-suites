@@ -9,6 +9,7 @@ if TYPE_CHECKING:
 from xoa_driver import enums
 from xoa_driver.utils import apply
 from xoa_driver.ports import PThor400G7S1P_b, PThor400G7S1P_c, POdin1G3S6PT1RJ45
+from xoa_driver.misc import Hex
 
 from plugin2889.const import DELAY_LEARNING_MAC, INTERVAL_CHECK_PORT_RESERVE, FECModeStr
 from plugin2889.model import exceptions
@@ -152,7 +153,7 @@ class TestResource:
         hex_data = f"{dest_mac}{own_mac}{four_f}{paddings}"
         if len(hex_data) // 2 > self.port.info.capabilities.max_xmit_one_packet_length:
             raise exceptions.PacketLengthExceed(len(hex_data) // 2, self.port.info.capabilities.max_xmit_one_packet_length)
-        await apply(self.port.tx_single_pkt.send.set(hex_data))  # P_XMITONE
+        await apply(self.port.tx_single_pkt.send.set(Hex(hex_data)))  # P_XMITONE
         await sleep_log(DELAY_LEARNING_MAC)
 
     async def set_tx_config_enable(self, on_off: enums.OnOff) -> None:
@@ -205,7 +206,7 @@ class TestResource:
                     ipv4_address=ipv4_properties.address,
                     subnet_mask=ipv4_properties.routing_prefix.to_ipv4(),
                     gateway=ipv4_properties.gateway,
-                    wild="0.0.0.0",
+                    wild=IPv4Address("0.0.0.0"),
                 )
             )
         elif self.port_config.profile.protocol_version.is_ipv6:

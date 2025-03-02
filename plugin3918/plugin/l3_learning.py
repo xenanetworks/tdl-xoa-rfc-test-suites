@@ -14,6 +14,7 @@ from ..model.port_config import PortConfiguration
 from ..utils.field import NewIPv4Address, NewIPv6Address, MacAddress
 from ..plugin.resource_manager import PortInstance, get_ip_property
 from .protocol_change import ProtocolChange
+from xoa_driver.misc import Hex
 
 ## SendGatewayArpRequests
 @dataclass
@@ -88,12 +89,12 @@ async def send_arp_learning_request(
     )
     *_, arp = await utils.apply(
         stream.packet.header.protocol.set(stream_config.header_segment_id_list),
-        stream.packet.header.data.set(bytes(packet_header).hex()),
+        stream.packet.header.data.set(Hex(bytes(packet_header).hex())),
         stream.enable.set_on(),
         stream.request.arp.get(),
     )
 
-    addr_coll.change_dmac_address(arp)
+    addr_coll.change_dmac_address(arp.mac_address)
 
 
 async def send_gateway_learning_request(

@@ -8,7 +8,9 @@ from ipaddress import (
     IPv4Network,
     IPv6Network,
 )
-
+from pydantic import BaseModel, Field, field_validator, ValidationInfo
+from pydantic_core import CoreSchema, core_schema
+from pydantic import GetCoreSchemaHandler, TypeAdapter
 
 class HexString(str):
     def to_list(self) -> List[str]:
@@ -20,28 +22,28 @@ class MacAddress(str):
     def from_bytes(cls, b: Union[bytes, bytearray]) -> "MacAddress":
         return cls("".join([hex(i).replace("0x", "").upper().zfill(2) for i in b]))
 
-    @classmethod
-    def __get_validators__(cls):
-        yield cls.validate
+    # @classmethod
+    # def __get_pydantic_core_schema__(cls, source_type: Any, handler: GetCoreSchemaHandler) -> CoreSchema:
+    #     return core_schema.no_info_after_validator_function(cls, handler(str))
 
-    @classmethod
-    def validate(cls, value) -> "MacAddress":
-        if not value:
-            value = "00:00:00:00:00:00"
-        validate_value = (
-            value.upper()
-            .replace("0x", "")
-            .replace("0X", "")
-            .replace(":", "")
-            .replace("-", "")
-        )
-        if len(validate_value) != 12:
-            raise ConfigError(f"{value} is not a valid mac address!")
-        for i in validate_value:
-            if i not in "0123456789ABCDEF":
-                raise ConfigError(f"{value} is not a valid mac address!")
+    # @classmethod
+    # def validate(cls, value) -> "MacAddress":
+    #     if not value:
+    #         value = "00:00:00:00:00:00"
+    #     validate_value = (
+    #         value.upper()
+    #         .replace("0x", "")
+    #         .replace("0X", "")
+    #         .replace(":", "")
+    #         .replace("-", "")
+    #     )
+    #     if len(validate_value) != 12:
+    #         raise ConfigError(f"{value} is not a valid mac address!")
+    #     for i in validate_value:
+    #         if i not in "0123456789ABCDEF":
+    #             raise ConfigError(f"{value} is not a valid mac address!")
 
-        return cls(":".join(re.findall(".{2}", validate_value)))
+    #     return cls(":".join(re.findall(".{2}", validate_value)))
 
     @property
     def hexstring(self) -> str:
@@ -80,13 +82,13 @@ class MacAddress(str):
 
 
 class NewIPv4Address(OldIPv4Address):
-    @classmethod
-    def __get_validators__(cls):
-        yield cls.validate
+    # @classmethod
+    # def __get_validators__(cls):
+    #     yield cls.validate
 
-    @classmethod
-    def validate(cls, value) -> "NewIPv4Address":
-        return NewIPv4Address(value)
+    # @classmethod
+    # def validate(cls, value) -> "NewIPv4Address":
+    #     return NewIPv4Address(value)
 
     @property
     def hexstring(self) -> str:
@@ -120,13 +122,13 @@ class NewIPv4Address(OldIPv4Address):
 
 
 class NewIPv6Address(OldIPv6Address):
-    @classmethod
-    def __get_validators__(cls):
-        yield cls.validate
+    # @classmethod
+    # def __get_validators__(cls):
+    #     yield cls.validate
 
-    @classmethod
-    def validate(cls, value) -> "NewIPv6Address":
-        return NewIPv6Address(value)
+    # @classmethod
+    # def validate(cls, value) -> "NewIPv6Address":
+    #     return NewIPv6Address(value)
 
     @property
     def hexstring(self) -> str:
@@ -155,14 +157,6 @@ class NewIPv6Address(OldIPv6Address):
 
 
 class Prefix(int):
-    @classmethod
-    def __get_validators__(cls):
-        yield cls.validate
-
-    @classmethod
-    def validate(cls, value) -> "Prefix":
-        return Prefix(value)
-
     def to_ipv4(self) -> NewIPv4Address:
         return NewIPv4Address(int(self * "1" + (32 - self) * "0", 2))
 

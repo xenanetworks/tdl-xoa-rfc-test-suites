@@ -1,6 +1,7 @@
 import math
 import asyncio
 from xoa_driver import utils
+from xoa_driver.misc import Hex
 from typing import TYPE_CHECKING, Iterator, List, Optional, Tuple, Union
 from .data_model import ArpRefreshData
 from .setup_source_port_rates import setup_source_port_rates
@@ -146,7 +147,7 @@ async def setup_address_refresh(
             for packet in packet_list:
                 address_refresh_tokens.append(
                     (
-                        port_struct.port_ins.tx_single_pkt.send.set(packet),
+                        port_struct.port_ins.tx_single_pkt.send.set(Hex(packet)),
                         port_struct.port_conf.is_rx_only,
                     )
                 )

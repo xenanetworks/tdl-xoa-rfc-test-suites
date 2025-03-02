@@ -1,22 +1,23 @@
 import copy
 import math
 from enum import Enum
-from pydantic import BaseModel, validator
+from pydantic import BaseModel, field_validator, Field
 from decimal import Decimal
 from dataclasses import dataclass
 from ..utils.constants import ResultState
 from ..utils.field import MacAddress, NewIPv4Address, NewIPv6Address
+from typing import Union, Annotated
 
 
 class AddressCollection(BaseModel):
-    smac: MacAddress = MacAddress("00:00:00:00:00:00")
-    dmac: MacAddress = MacAddress("00:00:00:00:00:00")
-    src_ipv4_addr: NewIPv4Address = NewIPv4Address("0.0.0.0")
-    dst_ipv4_addr: NewIPv4Address = NewIPv4Address("0.0.0.0")
-    src_ipv6_addr: NewIPv6Address = NewIPv6Address("::")
-    dest_ipv6_addr: NewIPv6Address = NewIPv6Address("::")
+    smac: MacAddress|str = MacAddress("00:00:00:00:00:00")
+    dmac: MacAddress|str = MacAddress("00:00:00:00:00:00")
+    src_ipv4_addr: NewIPv4Address|str = NewIPv4Address("0.0.0.0")
+    dst_ipv4_addr: NewIPv4Address|str = NewIPv4Address("0.0.0.0")
+    src_ipv6_addr: NewIPv6Address|str = NewIPv6Address("::")
+    dest_ipv6_addr: NewIPv6Address|str = NewIPv6Address("::")
 
-    def change_dmac_address(self, mac_address: "MacAddress") -> None:
+    def change_dmac_address(self, mac_address: Union["MacAddress", str]) -> None:
         self.dmac = mac_address
 
     def copy(self) -> "AddressCollection":
@@ -63,12 +64,12 @@ class AvgMinMax(BaseModel):
 
 class DelayData(BaseModel):
     counter_type: CounterType = CounterType.LATENCY
-    minimum: int = 0
-    maximum: int = 0
-    average: int = 0
+    minimum: Annotated[int, Field(validate_default=True)] = 0
+    maximum: Annotated[int, Field(validate_default=True)] = 0
+    average: Annotated[int, Field(validate_default=True)] = 0
     is_valid: bool = True
 
-    @validator("average", "minimum", "maximum", always=True)
+    @field_validator("average", "minimum", "maximum")
     def check_is_valid(cls, v, values):
         if v == values["counter_type"].value:
             values["is_valid"] = False

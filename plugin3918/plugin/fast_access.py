@@ -156,7 +156,7 @@ class Data3918:
                 GroupJoinLeaveDelay,
             ),
         ):
-            return list(self.test_types_configuration.rate_options.sweep_value_list)
+            return [int(value) for value in self.test_types_configuration.rate_options.sweep_value_list]
         return []
 
     def get_igmp_join_leave_rate(self) -> int:
