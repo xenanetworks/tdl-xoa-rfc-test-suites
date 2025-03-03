@@ -17,7 +17,7 @@ from pydantic import field_validator
 from typing import Union
 
 
-class IPV6AddressProperties(BaseModel):
+class IPV6AddressProperties(BaseModel, arbitrary_types_allowed=True):
     address: NewIPv6Address|str = NewIPv6Address("::")
     routing_prefix: Prefix|int = Prefix(24)
     public_address: NewIPv6Address|str = NewIPv6Address("::")
@@ -45,7 +45,7 @@ class IPV6AddressProperties(BaseModel):
         return self.address
 
 
-class IPV4AddressProperties(BaseModel):
+class IPV4AddressProperties(BaseModel, arbitrary_types_allowed=True):
     address: NewIPv4Address|str = NewIPv4Address("0.0.0.0")
     routing_prefix: Prefix|int = Prefix(24)
     public_address: NewIPv4Address|str = NewIPv4Address("0.0.0.0")
@@ -73,7 +73,7 @@ class IPV4AddressProperties(BaseModel):
         return self.address
 
 
-class PortConfiguration(BaseModel):
+class PortConfiguration(BaseModel, arbitrary_types_allowed=True):
     port_slot: str
     port_config_slot: str = ""
     # port_group: PortGroup
