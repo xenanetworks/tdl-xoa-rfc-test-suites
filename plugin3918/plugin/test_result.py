@@ -10,14 +10,14 @@ from typing import Union, Annotated
 
 
 class AddressCollection(BaseModel):
-    smac: MacAddress|str = MacAddress("00:00:00:00:00:00")
-    dmac: MacAddress|str = MacAddress("00:00:00:00:00:00")
-    src_ipv4_addr: NewIPv4Address|str = NewIPv4Address("0.0.0.0")
-    dst_ipv4_addr: NewIPv4Address|str = NewIPv4Address("0.0.0.0")
-    src_ipv6_addr: NewIPv6Address|str = NewIPv6Address("::")
-    dest_ipv6_addr: NewIPv6Address|str = NewIPv6Address("::")
+    smac: MacAddress = MacAddress("00:00:00:00:00:00")
+    dmac: MacAddress = MacAddress("00:00:00:00:00:00")
+    src_ipv4_addr: NewIPv4Address = NewIPv4Address("0.0.0.0")
+    dst_ipv4_addr: NewIPv4Address = NewIPv4Address("0.0.0.0")
+    src_ipv6_addr: NewIPv6Address = NewIPv6Address("::")
+    dest_ipv6_addr: NewIPv6Address = NewIPv6Address("::")
 
-    def change_dmac_address(self, mac_address: Union["MacAddress", str]) -> None:
+    def change_dmac_address(self, mac_address: "MacAddress") -> None:
         self.dmac = mac_address
 
     def copy(self) -> "AddressCollection":

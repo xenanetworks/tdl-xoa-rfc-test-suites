@@ -347,11 +347,12 @@ class TestCaseProcessor:
                 self.xoa_out.send_statistics(result)  # send intermediate data: is_final = True & result_state = 'PENDING'
                 for boundary in boundaries:
                     boundary.update_boundaries(result)
-            if all(boundary.port_test_passed for boundary in boundaries):
-                result.set_result_state(const.ResultState.DONE)
-            else:
-                result.set_result_state(const.ResultState.FAIL)
-            self._add_result(result)
+            if result is not None:
+                if all(boundary.port_test_passed for boundary in boundaries):
+                    result.set_result_state(const.ResultState.DONE)
+                else:
+                    result.set_result_state(const.ResultState.FAIL)
+                self._add_result(result)
 
     def _set_throughput_for_frame_size(self, frame_size: float, rate: float):
         """for latency relative to throughput use, use max throughput rate and only for throughput common result scope"""

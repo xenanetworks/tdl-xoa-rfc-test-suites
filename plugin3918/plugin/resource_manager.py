@@ -431,10 +431,10 @@ class ResourceManager:
 
     def __get_instance_by_config(self, port_config: PortConfiguration) -> PortInstance:
         port_identity = [
-            i for i in self._port_identities if i.name == port_config.port_config_slot
+            i for i in self._port_identities.values() if i.name == port_config.port_config_slot
         ][0]
-        if port_identity.name in self._port_instances:
-            return self._port_instances[port_identity.name]
+        if port_identity in self._port_instances:
+            return self._port_instances[port_identity]
 
         tester_obj = self._testers[port_identity.tester_id]
         port_obj = tester_obj.modules.obtain(port_identity.module_index).ports.obtain(

@@ -21,7 +21,7 @@ if TYPE_CHECKING:
 class ResourceManager:
     def __init__(
         self,
-        testers: dict[str, "xoa_testers.GenericAnyTester"],
+        testers: dict[str, "xoa_testers.L23Tester"],
         all_confs: list["PortConfiguration"],
         port_identities: list["PortIdentity"],
         test_conf: "TestConfigData",

@@ -1,7 +1,7 @@
 from copy import deepcopy
 from enum import Enum
 from typing import List, Optional, Union
-from pydantic import ConfigError
+from pydantic import PydanticUserError
 from ..utils.constants import (
     ETHER_TYPE_IPV4,
     ETHER_TYPE_IPV6,
@@ -374,7 +374,7 @@ class ProtocolChange:
     @classmethod
     def get_segment_definition_by_string(cls, protocol_str: str) -> SegmentDefinition:
         if not protocol_str in DEFAULT_SEGMENT_DIC:
-            raise ConfigError(f"Not Support {protocol_str}")
+            raise PydanticUserError(message=f"Not Support {protocol_str}", code=None)
         else:
             return deepcopy(DEFAULT_SEGMENT_DIC[protocol_str])
 
