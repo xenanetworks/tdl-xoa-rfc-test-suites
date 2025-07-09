@@ -202,7 +202,7 @@ class PortInstance:
             self.port.speed.mode.selection.set_auto(),
         ]
         if not isinstance(self.port, NOT_AUTONEG_SUPPORTED):
-            tokens.append(self.port.autoneg_selection.set_on())
+            tokens.append(self.port.autoneg_selection.set_on()) # type: ignore
         tokens += [
             self.port.speed.current.get(),
             self.port.net_config.mac_address.get(),
