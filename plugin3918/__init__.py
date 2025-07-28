@@ -76,7 +76,7 @@ class Model3918(BaseModel):
         )
         return v
 
-    @root_validator
+    @root_validator(skip_on_failure=True)
     def validate_model(cls, values):
         roles = []
         for vs in values["ports_configuration"].values():

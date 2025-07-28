@@ -717,7 +717,7 @@ class AddressCollection:
     src_ipv6_addr: IPv6Address
     dst_ipv6_addr: IPv6Address
 
-class IPV6AddressProperties(BaseModel):
+class IPV6AddressProperties(BaseModel, arbitrary_types_allowed=True):
     address: IPv6Address
     routing_prefix: Prefix  = Prefix(24)
     public_address: IPv6Address
@@ -743,7 +743,7 @@ class IPV6AddressProperties(BaseModel):
         return self.public_address if not self.public_address.is_empty else self.address
 
 
-class IPV4AddressProperties(BaseModel):
+class IPV4AddressProperties(BaseModel, arbitrary_types_allowed=True):
     address: IPv4Address
     routing_prefix: Prefix = Prefix(24)
     public_address: IPv4Address
@@ -775,7 +775,7 @@ class IPV4AddressProperties(BaseModel):
 
 
 
-class PortConfiguration(BaseModel):
+class PortConfiguration(BaseModel, arbitrary_types_allowed=True):
     port_slot: str
     port_config_slot: str = ""
     peer_config_slot: str
