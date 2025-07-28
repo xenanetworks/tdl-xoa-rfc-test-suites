@@ -11,3 +11,4 @@ config.py
 *.v3918
 /env
 .vscode
+**/.DS_Store
