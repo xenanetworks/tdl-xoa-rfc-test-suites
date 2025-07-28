@@ -157,8 +157,8 @@ class TestCaseBaseConfiguration(ABC, BaseModel):
 
 
 class RateSubTestConfiguration(TestCaseBaseConfiguration):
-    topology: TestTopology
-    direction: TrafficDirection
+    topology: TestTopology = TestTopology.PAIRS
+    direction: TrafficDirection = TrafficDirection.EAST_TO_WEST
     test_type: TestType = TestType.RATE_TEST
     throughput_test_enabled: bool
     forwarding_test_enabled: bool
@@ -248,7 +248,7 @@ class AddressCachingCapacityConfiguration(TestCaseBaseConfiguration):
 class AddressLearningRateConfiguration(TestCaseBaseConfiguration):
     test_type: TestType = TestType.ADDRESS_LEARNING_RATE
     address_sweep_options: NewRateSweepOptions
-    rate_iteration_options: RateIterationOptions
+    rate_iteration_options: RateIterationOptions = RateIterationOptions(initial_value=1.0, minimum_value=0.001, maximum_value=1.0, value_resolution=0.006, use_pass_threshold=False, pass_threshold=1.0)
     learn_mac_base_address: str
     test_port_mac_mode: TestPortMacMode
     learning_port_dmac_mode: LearningPortDMacMode
@@ -268,7 +268,7 @@ class AddressLearningRateConfiguration(TestCaseBaseConfiguration):
 
 class ErroredFramesFilteringConfiguration(TestCaseBaseConfiguration):
     test_type: TestType = TestType.ERRORED_FRAMES_FILTERING
-    rate_sweep_options: NewRateSweepOptions
+    rate_sweep_options: NewRateSweepOptions = NewRateSweepOptions(start_value=Decimal(0.5), end_value=Decimal(1.0), step_value=Decimal(0.5))
     oversize_test_enabled: bool
     max_frame_size: int
     oversize_span: int
@@ -281,7 +281,7 @@ class ErroredFramesFilteringConfiguration(TestCaseBaseConfiguration):
 
 class BroadcastForwardingConfiguration(TestCaseBaseConfiguration):
     test_type: TestType = TestType.BROADCAST_FORWARDING
-    rate_iteration_options: RateIterationOptions
+    rate_iteration_options: RateIterationOptions = RateIterationOptions(initial_value=1, minimum_value=0.001, maximum_value=1, value_resolution=0.005, use_pass_threshold=False, pass_threshold=1)
 
     def check_configuration(self) -> None:
         assert self.port_role_handler, INVALID_PORT_ROLE
@@ -717,13 +717,13 @@ class AddressCollection:
     src_ipv6_addr: IPv6Address
     dst_ipv6_addr: IPv6Address
 
-class IPV6AddressProperties(BaseModel):
-    address: IPv6Address | str
-    routing_prefix: Prefix | int = Prefix(24)
-    public_address: IPv6Address | str
-    public_routing_prefix: Prefix|int = Prefix(24)
-    gateway: IPv6Address|str
-    remote_loop_address: IPv6Address|str
+class IPV6AddressProperties(BaseModel, arbitrary_types_allowed=True):
+    address: IPv6Address
+    routing_prefix: Prefix  = Prefix(24)
+    public_address: IPv6Address
+    public_routing_prefix: Prefix = Prefix(24)
+    gateway: IPv6Address
+    remote_loop_address: IPv6Address
     ip_version: IPVersion = IPVersion.IPV6
 
     @property
@@ -743,13 +743,13 @@ class IPV6AddressProperties(BaseModel):
         return self.public_address if not self.public_address.is_empty else self.address
 
 
-class IPV4AddressProperties(BaseModel):
-    address: IPv4Address|str
-    routing_prefix: Prefix|int = Prefix(24)
-    public_address: IPv4Address|str
-    public_routing_prefix: Prefix|int = Prefix(24)
-    gateway: IPv4Address|str
-    remote_loop_address: IPv4Address|str
+class IPV4AddressProperties(BaseModel, arbitrary_types_allowed=True):
+    address: IPv4Address
+    routing_prefix: Prefix = Prefix(24)
+    public_address: IPv4Address
+    public_routing_prefix: Prefix = Prefix(24)
+    gateway: IPv4Address
+    remote_loop_address: IPv4Address
     ip_version: IPVersion = IPVersion.IPV4
 
     @property
@@ -775,7 +775,7 @@ class IPV4AddressProperties(BaseModel):
 
 
 
-class PortConfiguration(BaseModel):
+class PortConfiguration(BaseModel, arbitrary_types_allowed=True):
     port_slot: str
     port_config_slot: str = ""
     peer_config_slot: str

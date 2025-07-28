@@ -499,7 +499,7 @@ class Prefix(int):
         return IPv4Address(int(self * "1" + (32 - self) * "0", 2))
 
 
-class IPV6AddressProperties(BaseModel):
+class IPV6AddressProperties(BaseModel, arbitrary_types_allowed=True):
     address: IPv6Address | str
     routing_prefix: Prefix | int = Prefix(24)
     public_address: IPv6Address | str
@@ -525,7 +525,7 @@ class IPV6AddressProperties(BaseModel):
         return self.public_address if not self.public_address.is_empty else self.address
 
 
-class IPV4AddressProperties(BaseModel):
+class IPV4AddressProperties(BaseModel, arbitrary_types_allowed=True):
     address: IPv4Address | str
     routing_prefix: Prefix | int = Prefix(24)
     public_address: IPv4Address | str
@@ -555,7 +555,7 @@ class IPV4AddressProperties(BaseModel):
         return self.public_address if not self.public_address.is_empty else self.address
 
 
-class PortConfiguration(BaseModel):
+class PortConfiguration(BaseModel, arbitrary_types_allowed=True):
     port_slot: str
     port_config_slot: str = ""
     peer_config_slot: str

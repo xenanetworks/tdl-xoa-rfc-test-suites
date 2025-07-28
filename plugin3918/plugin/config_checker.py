@@ -20,7 +20,7 @@ class ConfigChecker:
         min_mix = self.data.test_configuration.frame_sizes.mixed_length_config.min
         max_mix = self.data.test_configuration.frame_sizes.mixed_length_config.max
         for src_instance in self.resource_manager.mc_src_ports():
-            port_can_mix_length = False  # TODO: 替换成真实值
+            port_can_mix_length = False  # TODO: To be replaced by real value
             if port_can_mix_length:
                 if src_instance.min_packet_length > min_mix:
                     raise MixPacketLegnthTooSmall(

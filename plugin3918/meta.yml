@@ -1,5 +1,5 @@
 name: "RFC-3918"
-version: "1.0.0"
-core_version: ">=1.0.0"
+version: "1.1.0"
+core_version: ">=1.1.0"
 entry_object: "TestSuite3918"
 data_model: "Model3918"

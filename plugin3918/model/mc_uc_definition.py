@@ -22,15 +22,15 @@ class McDefinition(BaseModel):
     use_igmp_source_address: bool
     force_leave_to_all_routers_group: bool
     max_igmp_frame_rate: float
-    mc_ip_v4_start_address: NewIPv4Address|str
-    mc_ip_v6_start_address: NewIPv6Address|str
+    mc_ip_v4_start_address: NewIPv4Address
+    mc_ip_v6_start_address: NewIPv6Address
     mc_address_step_value: int
     stream_definition: ProtocolSegmentProfileConfig
     uc_flow_def: UcFlowDefinition
     item_id: str
 
     @property
-    def mc_ip_start_address(self) -> Union[NewIPv4Address, NewIPv6Address, str]:
+    def mc_ip_start_address(self) -> Union[NewIPv4Address, NewIPv6Address]:
         return (
             self.mc_ip_v4_start_address
             if self.stream_definition.ip_version == IPVersion.IPV4

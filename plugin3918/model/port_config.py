@@ -17,13 +17,13 @@ from pydantic import field_validator
 from typing import Union
 
 
-class IPV6AddressProperties(BaseModel):
-    address: NewIPv6Address|str = NewIPv6Address("::")
-    routing_prefix: Prefix|int = Prefix(24)
-    public_address: NewIPv6Address|str = NewIPv6Address("::")
-    public_routing_prefix: Prefix|int = Prefix(24)
-    gateway: NewIPv6Address|str = NewIPv6Address("::")
-    remote_loop_address: NewIPv6Address|str = NewIPv6Address("::")
+class IPV6AddressProperties(BaseModel, arbitrary_types_allowed=True):
+    address: NewIPv6Address = NewIPv6Address("::")
+    routing_prefix: Prefix = Prefix(24)
+    public_address: NewIPv6Address = NewIPv6Address("::")
+    public_routing_prefix: Prefix = Prefix(24)
+    gateway: NewIPv6Address = NewIPv6Address("::")
+    remote_loop_address: NewIPv6Address = NewIPv6Address("::")
     ip_version: IPVersion = IPVersion.IPV6
 
     @staticmethod
@@ -39,19 +39,19 @@ class IPV6AddressProperties(BaseModel):
         return Prefix(v)
 
     @property
-    def usable_dest_ip_address(self) -> Union[NewIPv6Address, str]:
+    def usable_dest_ip_address(self) -> NewIPv6Address:
         if not self.public_address.is_empty:
             return self.public_address
         return self.address
 
 
-class IPV4AddressProperties(BaseModel):
-    address: NewIPv4Address|str = NewIPv4Address("0.0.0.0")
-    routing_prefix: Prefix|int = Prefix(24)
-    public_address: NewIPv4Address|str = NewIPv4Address("0.0.0.0")
-    public_routing_prefix: Prefix|int = Prefix(24)
-    gateway: NewIPv4Address|str = NewIPv4Address("0.0.0.0")
-    remote_loop_address: NewIPv4Address|str = NewIPv4Address("0.0.0.0")
+class IPV4AddressProperties(BaseModel, arbitrary_types_allowed=True):
+    address: NewIPv4Address = NewIPv4Address("0.0.0.0")
+    routing_prefix: Prefix = Prefix(24)
+    public_address: NewIPv4Address = NewIPv4Address("0.0.0.0")
+    public_routing_prefix: Prefix = Prefix(24)
+    gateway: NewIPv4Address = NewIPv4Address("0.0.0.0")
+    remote_loop_address: NewIPv4Address = NewIPv4Address("0.0.0.0")
     ip_version: IPVersion = IPVersion.IPV4
 
     @staticmethod
@@ -67,13 +67,13 @@ class IPV4AddressProperties(BaseModel):
         return Prefix(v)
 
     @property
-    def usable_dest_ip_address(self) -> Union[NewIPv4Address, str]:
+    def usable_dest_ip_address(self) -> NewIPv4Address:
         if not self.public_address.is_empty:
             return self.public_address
         return self.address
 
 
-class PortConfiguration(BaseModel):
+class PortConfiguration(BaseModel, arbitrary_types_allowed=True):
     port_slot: str
     port_config_slot: str = ""
     # port_group: PortGroup
@@ -98,10 +98,10 @@ class PortConfiguration(BaseModel):
     latency_offset_ms: int  # QUESTION: can be negative?
     fec_mode: bool
 
-    ip_gateway_mac_address: MacAddress|str
+    ip_gateway_mac_address: MacAddress
     reply_arp_requests: bool
     reply_ping_requests: bool
-    remote_loop_mac_address: MacAddress|str
+    remote_loop_mac_address: MacAddress
     ipv4_properties: IPV4AddressProperties
     ipv6_properties: IPV6AddressProperties
 

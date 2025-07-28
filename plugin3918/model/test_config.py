@@ -1,6 +1,7 @@
 from typing import List, Annotated
 from pydantic import (
-    ConfigError,
+    PydanticUserError,
+    PydanticErrorCodes,
     Field,
     NonNegativeInt,
     BaseModel,
@@ -52,12 +53,14 @@ class FrameSizeConfiguration(BaseModel):
         if "packet_size_type" in values:
             if values["packet_size_type"] == PacketSizeType.MIX:
                 if not v or len(v) != len(MIXED_DEFAULT_WEIGHTS):
-                    raise ConfigError(
-                        f"Not enough mixed weights; there should be {len(MIXED_DEFAULT_WEIGHTS)} number of mixed weights!"
+                    raise PydanticUserError(
+                        message=f"Not enough mixed weights; there should be {len(MIXED_DEFAULT_WEIGHTS)} number of mixed weights!",
+                        code=None
                     )
                 if not sum(v) == 100:
-                    raise ConfigError(
-                        f"The sum of packet weights must be 100% (is currently {sum(v)}%.)"
+                    raise PydanticUserError(
+                        message=f"The sum of packet weights must be 100% (is currently {sum(v)}%.)",
+                        code=None
                     )
         return v
 

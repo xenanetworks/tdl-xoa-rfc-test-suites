@@ -1,4 +1,4 @@
-tdl-xoa-driver
-tdl-xoa-core
-tdl-xoa-converter
+tdl-xoa-driver>=1.3.0
+tdl-xoa-core>= 1.1.0
+tdl-xoa-converter>= 1.1.0
 rich==12.6.0

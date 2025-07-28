@@ -35,7 +35,7 @@ class Data3918:
         return self.test_types_configuration != BaseOptions()
 
     def set_test_type_operation(
-        self, test_types_configuration: "BaseOptionsType"
+        self, test_types_configuration: BaseOptions
     ) -> None:
         self.test_types_configuration = test_types_configuration
 
