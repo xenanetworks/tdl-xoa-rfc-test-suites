@@ -8,7 +8,9 @@ from ipaddress import (
 )
 from ..model.m_protocol_segment import BinaryString
 from . import exceptions
-
+from pydantic import Field, GetJsonSchemaHandler
+from pydantic.json_schema import JsonSchemaValue
+from pydantic_core import core_schema
 
 def hex_string_to_binary_string(hex: str) -> "BinaryString":
     """binary string with leading zeros"""
@@ -70,6 +72,25 @@ class MacAddress(str):
 
     def to_binary_string(self) -> "BinaryString":
         return hex_string_to_binary_string(self.replace(":", ""))
+    
+    @classmethod
+    def __get_pydantic_core_schema__(cls, source_type, handler):
+        return core_schema.no_info_after_validator_function(
+            cls, 
+            core_schema.str_schema(pattern=r'^[0-9A-Fa-f]{12}$')
+        )
+
+    @classmethod
+    def __get_pydantic_json_schema__(
+        cls, core_schema: core_schema.CoreSchema, handler: GetJsonSchemaHandler
+    ) -> JsonSchemaValue:
+        json_schema = handler(core_schema)
+        json_schema.update({
+            "type": "string",
+            "pattern": "^[0-9A-Fa-f]{12}$",
+            "description": "MAC address as 12 hex characters"
+        })
+        return json_schema
 
 
 class IPv4Address(OldIPv4Address):
@@ -117,6 +138,26 @@ class IPv6Address(OldIPv6Address):
 class Prefix(int):
     def to_ipv4(self) -> IPv4Address:
         return IPv4Address(int(self * "1" + (32 - self) * "0", 2))
+    
+    @classmethod
+    def __get_pydantic_core_schema__(cls, source_type, handler):
+        return core_schema.no_info_after_validator_function(
+            cls, 
+            core_schema.int_schema(ge=0, le=32)
+        )
+    
+    @classmethod
+    def __get_pydantic_json_schema__(
+        cls, core_schema: core_schema.CoreSchema, handler: GetJsonSchemaHandler
+    ) -> JsonSchemaValue:
+        json_schema = handler(core_schema)
+        json_schema.update({
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 32,
+            "description": "Network prefix length"
+        })
+        return json_schema
 
 
 IPAddress = Union[IPv4Address, IPv6Address]

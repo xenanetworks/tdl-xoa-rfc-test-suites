@@ -1,5 +1,5 @@
 name: "RFC-2544"
-version: "1.1.0"
+version: "1.1.1"
 core_version: ">=1.1.0"
 entry_object: "TestSuite2544"
 data_model: "PluginModel2544"
