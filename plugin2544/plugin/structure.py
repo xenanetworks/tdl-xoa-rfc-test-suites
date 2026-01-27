@@ -1,7 +1,7 @@
 import asyncio
 from typing import List, TYPE_CHECKING, Optional, Set, Tuple, Union
 from dataclasses import dataclass, field
-from xoa_driver import enums, misc, utils as driver_utils
+from xoa_driver import ports, enums, misc, utils as driver_utils
 from xoa_driver.misc import Hex
 from .common import gen_macaddress
 from .data_model import (
@@ -123,7 +123,7 @@ class PortStruct:
                 exceptions.BroadReachModeNotSupport(self._port_identity.name)
             )
         elif isinstance(self.port_ins, const.BrrPorts):
-            await self.port_ins.brr_mode.set(broadr_reach_mode.to_xmp())
+            await self.port_ins.brr.mode.set(broadr_reach_mode.to_xmp())
 
     async def set_mdi_mdix_mode(self, mdi_mdix_mode: const.MdiMdixMode) -> None:
         if self.port_ins.info.capabilities.can_mdi_mdix == enums.YesNo.NO:
@@ -139,19 +139,19 @@ class PortStruct:
             return
 
         if bool(self.port_ins.info.capabilities.can_auto_neg_base_r):
-            await self.port_ins.pcs_pma.auto_neg.settings.set(
+            await self.port_ins.layer1.anlt.an.settings.set(
                 enums.AutoNegMode.ANEG_ON,
-                enums.AutoNegTecAbility.DEFAULT_TECH_MODE,
-                enums.AutoNegFECOption.DEFAULT_FEC,
-                enums.AutoNegFECOption.DEFAULT_FEC,
-                enums.PauseMode.NO_PAUSE,
+                Hex("0000000000000000"),
+                Hex("00"),
+                Hex("00"),
+                Hex("00"),
             )
         else:
             self._xoa_out.send_warning(
                 exceptions.ANLTNotSupport(self._port_identity.name)
             )
         if bool(self.port_ins.info.capabilities.can_set_link_train):
-            await self.port_ins.pcs_pma.link_training.settings.set(
+            await self.port_ins.layer1.anlt.lt.settings.set(
                 enums.LinkTrainingMode.STANDALONE,
                 enums.PAM4FrameSize.P16K_FRAME,
                 enums.LinkTrainingInitCondition.NO_INIT,
@@ -179,7 +179,7 @@ class PortStruct:
         if mode not in self.port_ins.info.port_possible_speed_modes:
             self._xoa_out.send_warning(exceptions.PortSpeedWarning(mode))
         else:
-            await self.port_ins.speed.mode.selection.set(mode)
+            await self.port_ins.speed.selection.set(mode)
 
     async def set_sweep_reduction(self, ppm: int) -> None:
         await self.port_ins.speed.reduction.set(ppm=ppm)
@@ -190,10 +190,11 @@ class PortStruct:
         await self.port_ins.tx_config.delay.set(port_stagger_steps)  # P_TXDELAY
 
     async def set_fec_mode(self, fec_mode: const.FECModeStr) -> None:
-        """Loki-100G-5S-2P  module 4 * 25G support FC_FEC mode"""
         if fec_mode == const.FECModeStr.OFF:
             return
-        await self.port_ins.fec_mode.set(fec_mode.to_xmp())  # PP_FECMODE
+        if isinstance(self.port_ins, ports.Z10OdinPort):
+            return
+        await self.port_ins.layer1.pcs.fec_mode.set(fec_mode.to_xmp())  # PP_FECMODE
 
     async def set_max_header(self, header_length: int) -> None:
         # calculate max header length
@@ -227,7 +228,7 @@ class PortStruct:
         tokens = [
             self.port_ins.sync_status.get(),
             self.port_ins.traffic.state.get(),
-            self.port_ins.net_config.mac_address.get(),
+            self.port_ins.net_config.mac.address.get(),
             self.port_ins.speed.current.get(),
         ]
         if self.port_ins.is_reserved_by_me():
@@ -269,10 +270,10 @@ class PortStruct:
         return self.port_ins.traffic.state.set(traffic_state)
 
     async def set_arp_trucks(self, arp_datas: Set["RXTableData"]) -> None:
-        arp_chunk: List["misc.ArpChunk"] = []
+        arp_chunk: List["misc.ArpEntry"] = []
         for arp_data in arp_datas:
             arp_chunk.append(
-                misc.ArpChunk(
+                misc.ArpEntry(
                     IPv4Address(arp_data.destination_ip),
                     const.IPPrefixLength.IPv4.value,
                     enums.OnOff.OFF,
@@ -282,10 +283,10 @@ class PortStruct:
         await self.port_ins.arp_rx_table.set(arp_chunk)
 
     async def set_ndp_trucks(self, ndp_datas: Set["RXTableData"]) -> None:
-        ndp_chunk: List["misc.NdpChunk"] = []
+        ndp_chunk: List["misc.NdpEntry"] = []
         for rx_data in ndp_datas:
             ndp_chunk.append(
-                misc.NdpChunk(
+                misc.NdpEntry(
                     IPv6Address(rx_data.destination_ip),
                     const.IPPrefixLength.IPv6.value,
                     enums.OnOff.OFF,
@@ -342,7 +343,7 @@ class PortStruct:
             )
 
     async def set_mac_address(self, mac_addr: str) -> None:
-        await self.port_ins.net_config.mac_address.set(Hex(mac_addr))
+        await self.port_ins.net_config.mac.address.set(Hex(mac_addr))
         self.properties.native_mac_address = MacAddress(mac_addr)
 
     @property

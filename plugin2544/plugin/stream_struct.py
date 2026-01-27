@@ -72,7 +72,7 @@ class PRStream:
                 pps=rx_frames.packet_count_last_sec,
                 bytes_count=rx_frames.byte_count_since_cleared,
             ),
-            live_loss_frames=error.non_incre_seq_event_count,
+            live_loss_frames=error.packet_loss_by_seq,
             latency=DelayData(
                 counter_type=const.CounterType.LATENCY,
                 minimum=latency.min_val,
